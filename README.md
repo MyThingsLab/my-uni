@@ -5,7 +5,7 @@
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![MIT](https://img.shields.io/badge/license-MIT-green)
 
-A [MyThingsLab](../mythings-core) `My[X]` tool: given a "field of study" issue
+A [MyThingsLab](../my-things-core) `My[X]` tool: given a "field of study" issue
 (e.g. "Computer Science, undergrad-equivalent depth"), decomposes the field
 into a curriculum — an ordered set of topics with prerequisites — and opens
 each as its own issue labeled both `my-uni` and `my-researcher` so
@@ -39,7 +39,7 @@ MyResearcher directly — it only opens issues MyResearcher already watches for.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ../mythings-core -e ../my-guard -e ".[dev]"
+pip install -e ../my-things-core -e ../my-guard -e ".[dev]"
 pytest
 ```
 
