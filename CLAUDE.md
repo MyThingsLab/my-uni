@@ -8,20 +8,25 @@ covered here defers to `HARNESS.md`, then `mythings-core/docs/CONVENTIONS.md`.
 
 ## This tool
 
-- **Purpose:** given a "field of study" issue (label `my-uni`), decompose the
-  field into a curriculum — an ordered set of topics with prerequisites — and
-  open each topic as its own issue labeled both `my-uni` and `my-researcher`
-  so MyResearcher picks it up on its own schedule.
-- **The single Engine call:** "decompose this field into a curriculum: an
-  ordered list of topics, each with a one-line rationale and its
-  prerequisites." Input is the field issue's title + body plus the titles of
-  topics already opened for it (so a re-run extends rather than re-proposes).
-  Against `NoopEngine` (or any engine giving no usable reply): the field
-  issue's own title becomes the sole topic — never a fabricated curriculum.
-- **Invariants:** exactly one Engine call per run; post-Engine dedupe drops
-  any proposed topic whose title case-insensitively matches an already-opened
-  one; the survivors are truncated to `--max-topics` (default 12) —
-  deterministic, not model-driven. MyUni never builds or ingests a knowledge
-  corpus, and never calls MyResearcher directly — it only opens issues
-  MyResearcher already watches for.
-- **Backlog label:** `my-uni`.
+- **Purpose:** given a "field of study" issue, decomposes the field into a
+  curriculum — an ordered set of topics with prerequisites — and opens each as
+  its own issue labeled both `my-uni` and `my-researcher` so **MyResearcher**
+  picks it up and produces a cited study brief for it. Deliberately upstream of
+  MyResearcher, not a duplicate: MyUni decides what a field's topics *are*;
+  MyResearcher's `plan` mode only orders topics it's *given*.
+- **The single Engine call:** one per invocation — "decompose this field into
+  a curriculum: an ordered list of topics, each with a one-line rationale and
+  its prerequisites" → `{"topics": [{"title", "rationale", "prereqs"}]}`.
+  Against `NoopEngine`, emits the field issue's own title as the sole topic —
+  honest degrade, no decomposition.
+- **Invariants / rules:** exactly one Engine call per run; post-Engine dedupe
+  is deterministic — drop any proposed topic whose title case-insensitively
+  matches an already-opened topic (matched via a `part-of: #N` marker in the
+  topic issue body); deterministic truncation to `--max-topics` (default 12),
+  never trusting the model's enthusiasm for how big a field is. Never calls
+  MyResearcher directly — only opens issues MyResearcher already watches for.
+  Never ingests a corpus itself. No `Workspace`, no PR — the only side effect
+  is a series of `create_issue`/`add_labels` calls, each an
+  `Action(kind="issue-create")` through `Policy.evaluate()`, `ALLOW` by
+  default (low-risk, reversible — a human can close any of them).
+- **Backlog label:** `my-uni`
