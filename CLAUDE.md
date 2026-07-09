@@ -14,12 +14,15 @@ covered here defers to `HARNESS.md`, then `mythings-core/docs/CONVENTIONS.md`.
   picks it up and produces a cited study brief for it. Deliberately upstream of
   MyResearcher, not a duplicate: MyUni decides what a field's topics *are*;
   MyResearcher's `plan` mode only orders topics it's *given*.
-- **The single Engine call:** one per invocation — "decompose this field into
-  a curriculum: an ordered list of topics, each with a one-line rationale and
-  its prerequisites" → `{"topics": [{"title", "rationale", "prereqs"}]}`.
+- **The single Engine call:** one per `plan` invocation — "decompose this field
+  into a curriculum: an ordered list of topics, each with a one-line rationale
+  and its prerequisites" → `{"topics": [{"title", "rationale", "prereqs"}]}`.
   Against `NoopEngine`, emits the field issue's own title as the sole topic —
-  honest degrade, no decomposition.
-- **Invariants / rules:** exactly one Engine call per run; post-Engine dedupe
+  honest degrade, no decomposition. `status` is fully deterministic — zero
+  Engine calls: it diffs the field's topic issues (matched via `part-of: #N`)
+  across `state=all` vs `state=open` and reports briefed (closed) vs pending.
+- **Invariants / rules:** at most one Engine call per run (`plan`: exactly one;
+  `status`: zero — it needs no judgment); post-Engine dedupe
   is deterministic — drop any proposed topic whose title case-insensitively
   matches an already-opened topic (matched via a `part-of: #N` marker in the
   topic issue body); deterministic truncation to `--max-topics` (default 12),
