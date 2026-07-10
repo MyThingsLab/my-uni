@@ -24,16 +24,44 @@ myuni plan --issue 7 --repo MyThingsLab/study --engine claude-cli
 
 # Cap the curriculum size, dry-run against the noop engine:
 myuni plan --issue 7 --max-topics 6 --engine noop
+
+# Report a field's coverage: which topics have a brief, which are pending.
+myuni status --issue 7 --repo MyThingsLab/study
 ```
 
-Each invocation makes **exactly one** Engine call. Against the default
+Each `plan` invocation makes **exactly one** Engine call. Against the default
 `--engine noop` (zero tokens), the field issue's own title becomes the sole
 topic — an honest degrade, never a fabricated curriculum. Re-running against
 the same field issue extends the curriculum: already-opened topics are
-deduped by title, never re-proposed.
+deduped by title, never re-proposed. `status` makes **zero** Engine calls: a
+topic counts as briefed once its issue is closed (the merged research PR says
+`Closes #N`), pending otherwise.
 
 MyUni never builds or ingests a knowledge corpus itself, and never calls
 MyResearcher directly — it only opens issues MyResearcher already watches for.
+
+## The pipeline, end to end
+
+The live deployment is the [`MyThingsLab/study`](https://github.com/MyThingsLab/study)
+repo, which hosts both the issues and the committed briefs:
+
+1. A human files a **field issue** (e.g. "Physics") labeled `my-uni`.
+2. `myuni plan --issue N --repo MyThingsLab/study --engine claude-cli`
+   decomposes it into **topic issues** (≤ `--max-topics` per run), each
+   labeled `my-uni` + `my-researcher` and carrying a `part-of: #N` marker.
+3. `myresearcher brief --issue T --repo MyThingsLab/study` discovers sources
+   (arXiv keyless; the web backend needs `TAVILY_API_KEY`) and opens a PR
+   committing `research/<topic>.md`, whose body `Closes #T`.
+4. A human merges the brief PR; the topic issue closes; `myuni status` shows
+   the field's coverage tick up. Re-running `plan` later proposes only
+   *new* topics.
+
+Step 3 is **not yet scheduled**: the fleet cycle
+(`fleet-dispatch/fleet_cycle.py`, systemd `fleet-cycle.timer`) does not run
+`myresearcher brief` against open `my-researcher` issues — briefs are produced
+by manual invocations until that consumption loop is wired in. Both CLIs need
+an authenticated Claude CLI (`CLAUDE_CONFIG_DIR=~/.claude-personal` on the
+fleet host) for `--engine claude-cli`; the default `noop` degrades honestly.
 
 ## Install (development)
 
