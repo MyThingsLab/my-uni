@@ -60,8 +60,6 @@ def main(argv: list[str] | None = None) -> int:
             )
             for topic in coverage.pending:
                 print(f"  pending: #{topic.number} {topic.title}")
-        else:
-            return 1
     except ValueError as exc:
         print(f"myuni: {exc}", flush=True)
         return 1

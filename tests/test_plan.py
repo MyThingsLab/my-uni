@@ -145,6 +145,17 @@ def test_cap_exceeded_truncates_deterministically() -> None:
     assert len(result.topics_opened) == 3
 
 
+def test_malformed_engine_reply_degrades_to_field_issue_title() -> None:
+    gh = FakeGh(existing_topics=[])
+    engine = ScriptedEngine("not valid json")
+
+    result = _run(gh, engine)
+
+    assert len(result.topics_opened) == 1
+    create_calls = [c for c in gh.calls if c[:2] == ["issue", "create"]]
+    assert create_calls[0][create_calls[0].index("--title") + 1] == FIELD_ISSUE["title"]
+
+
 def test_policy_deny_skips_creating_that_issue() -> None:
     proposed = [{"title": "Discrete Math", "rationale": "", "prereqs": []}]
     gh = FakeGh(existing_topics=[])
