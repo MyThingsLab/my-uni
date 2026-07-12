@@ -6,6 +6,7 @@ from mythings.engine import EngineRequest, EngineResult
 from mythings.github import GitHub
 from mythings.ledger import Ledger
 from mythings.policy import Action, Decision, Policy, PolicyResult
+from mythings.testing import ScriptedEngine
 
 from myuni.plan import plan
 
@@ -39,14 +40,11 @@ class FakeGh:
         raise AssertionError(f"unexpected gh call: {argv}")
 
 
-class ScriptedEngine:
-    def __init__(self, topics: list[dict]) -> None:
-        self.topics = topics
-        self.calls: list[EngineRequest] = []
+def scripted_topics(topics: list[dict]) -> ScriptedEngine:
+    return ScriptedEngine(json.dumps({"topics": topics}))
 
-    def run(self, request: EngineRequest) -> EngineResult:
-        self.calls.append(request)
-        return EngineResult(text=json.dumps({"topics": self.topics}))
+
+
 
 
 class AllowAll:
@@ -89,7 +87,7 @@ def test_happy_path_opens_new_topic_issues() -> None:
         {"title": "Networking", "rationale": "systems", "prereqs": ["Operating Systems"]},
     ]
     gh = FakeGh(existing_topics=[])
-    engine = ScriptedEngine(proposed)
+    engine = scripted_topics(proposed)
 
     result = _run(gh, engine)
 
@@ -128,7 +126,7 @@ def test_all_topics_already_exist_opens_nothing() -> None:
     ]
     existing = [_existing(1, "Discrete Math", 7), _existing(2, "Data Structures", 7)]
     gh = FakeGh(existing_topics=existing)
-    engine = ScriptedEngine(proposed)
+    engine = scripted_topics(proposed)
 
     result = _run(gh, engine)
 
@@ -140,7 +138,7 @@ def test_all_topics_already_exist_opens_nothing() -> None:
 def test_cap_exceeded_truncates_deterministically() -> None:
     proposed = [{"title": f"Topic {i}", "rationale": "", "prereqs": []} for i in range(20)]
     gh = FakeGh(existing_topics=[])
-    engine = ScriptedEngine(proposed)
+    engine = scripted_topics(proposed)
 
     result = _run(gh, engine, max_topics=3)
 
@@ -150,7 +148,7 @@ def test_cap_exceeded_truncates_deterministically() -> None:
 def test_policy_deny_skips_creating_that_issue() -> None:
     proposed = [{"title": "Discrete Math", "rationale": "", "prereqs": []}]
     gh = FakeGh(existing_topics=[])
-    engine = ScriptedEngine(proposed)
+    engine = scripted_topics(proposed)
 
     class DenyAll:
         def evaluate(self, action: Action) -> PolicyResult:
